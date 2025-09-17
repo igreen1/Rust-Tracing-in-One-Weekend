@@ -1,4 +1,4 @@
-use num_traits::{Float, PrimInt, Zero};
+use num_traits::{Float, Zero};
 use std::cmp::{PartialEq, PartialOrd};
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -17,7 +17,7 @@ pub struct Vec3<T> {
 
 impl<T> Vec3<T>
 where
-    T: Add<Output = T> + Mul<Output = T> + Div<Output = T> + Sub<Output = T> + Copy + Zero,
+    T: Add<Output = T> + Mul<Output = T> + Sub<Output = T> + Copy + Zero,
 {
     /// Create a new vector
     pub fn new(x: T, y: T, z: T) -> Vec3<T> {
@@ -53,8 +53,24 @@ where
     }
 }
 
+impl<T> Div<T> for Vec3<T>
+where
+    T: Div<Output = T> + Copy,
+{
+    type Output = Self;
+
+    fn div(self, rhs: T) -> Self::Output {
+        Self {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
+        }
+    }
+}
+
 impl<T> Mul<T> for Vec3<T>
-where T: Mul<Output = T> + Copy
+where
+    T: Mul<Output = T> + Copy,
 {
     type Output = Self;
 
@@ -93,12 +109,13 @@ impl<T: Float> Vec3<T> {
     }
 }
 
-impl<T: Float + PrimInt> Add for Vec3<T> {
+impl<T> Add<Vec3<T>> for Vec3<T>
+where
+    T: Add<Output = T>,
+{
     type Output = Vec3<T>;
-    /// Add two vectors to create a resultant vector
-    /// Handles only float or integer type vectors
-    fn add(self, rhs: Self) -> Self::Output {
-        Vec3 {
+    fn add(self, rhs: Vec3<T>) -> Self::Output {
+        Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
             z: self.z + rhs.z,
@@ -108,12 +125,12 @@ impl<T: Float + PrimInt> Add for Vec3<T> {
 
 impl<T> Sub for Vec3<T>
 where
-    T: Add<Output = T> + Mul<Output = T> + Div<Output = T> + Sub<Output = T> + Copy + Zero,
+    T: Sub<Output = T> + Copy + Zero,
 {
     type Output = Vec3<T>;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Vec3 {
+        Self {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
             z: self.z - rhs.z,
@@ -178,6 +195,13 @@ mod tests {
         let b = Vec3::new(1.0, 2.0, 3.0);
         let result = a - b;
         assert_eq!(result, Vec3::new(3.0, 3.0, 3.0));
+    }
+    #[test]
+    fn test_vector_addition() {
+        let a = Vec3::new(4.0, 5.0, 6.0);
+        let b = Vec3::new(1.0, 2.0, 3.0);
+        let result = a + b;
+        assert_eq!(result, Vec3::new(5.0, 7.0, 9.0));
     }
 
     #[test]

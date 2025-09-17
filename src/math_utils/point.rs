@@ -17,13 +17,27 @@ impl<T> Point<T> {
     }
 }
 
+impl<T> Sub<Vec3<T>> for Point<T>
+where
+    T: Sub<Output = T>,
+{
+    type Output = Point<T>;
+    fn sub(self, rhs: Vec3<T>) -> Self::Output {
+        Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
 impl<T> Add<Vec3<T>> for Point<T>
 where
     T: Add<Output = T>,
 {
     type Output = Point<T>;
     fn add(self, rhs: Vec3<T>) -> Self::Output {
-        Point {
+        Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
             z: self.z + rhs.z,
@@ -31,9 +45,9 @@ where
     }
 }
 
-
-impl<T> Add<Point<T>> for Vec3<T> 
-where T: Add<Output = T>
+impl<T> Add<Point<T>> for Vec3<T>
+where
+    T: Add<Output = T>,
 {
     type Output = Point<T>;
     fn add(self, rhs: Point<T>) -> Self::Output {
