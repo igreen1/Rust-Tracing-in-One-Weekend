@@ -40,7 +40,7 @@ where
 
     /// Calculate the sum of squares of the elements of the 3d vectors
     pub fn magnitude_squared(&self) -> T {
-        self.x * self.x + self.y * self.y + self.z * self.z
+        return self.dot(self)
     }
 
     /// Return a vector with all elements equal to zero
