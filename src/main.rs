@@ -31,8 +31,8 @@ fn main() {
     let pixel_du = viewport_u / (image_width as f64);
     let pixel_dv = viewport_v / (image_height as f64);
 
-    let viewport_upper_left =
-        camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+    let viewport_upper_left =camera_center
+                             - Vec3::new(0., 0., focal_length) - viewport_u/2. - viewport_v/2.;
     let pixel_00_location = viewport_upper_left + 0.5 * (pixel_du + pixel_dv);
     // *** Start Rendering ***
 
@@ -48,24 +48,23 @@ fn main() {
             let col = i as f64;
 
             let pixel_center = pixel_00_location + (col * pixel_du) + (row * pixel_dv);
-            // let pixel_center = Point::new(0.0, 0.0, -1.);
             let ray_direction = pixel_center - camera_center;
-            let ray = Ray::new(pixel_center, ray_direction);
+            let ray = Ray::new(camera_center, ray_direction);
 
-            let color = get_ray_color(camera_center, ray);
+            let color = get_ray_color(ray);
             write(&mut file_handle, color);
         }
     }
 }
 
-fn get_ray_color(_camera_center: Point<f64>, ray: Ray<f64>) -> Color {
+fn get_ray_color(ray: Ray<f64>) -> Color {
 
     let sphere = Sphere::new(
         // in right hand coordinate system, "z is negative into the screen"
         // so as we go further away, z should get more negative
         // so somewhere, my zs are fucked up
-        Point::new(0.0, 0.0, -2.3), 
-        1.
+        Point::new(0.0, 0.0, -1.), 
+        0.5
     );
     let t = sphere.hit_sphere(&ray);
     if t > 0.0{
