@@ -68,9 +68,15 @@ fn main() {
 }
 
 fn make_world() -> Group {
-    let center_sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
+    let center_sphere = Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5));
+    let ground_sphere = Box::new(
+        Sphere::new(
+            Point::new(0.0, -100.5, -2.0),
+            100.0
+        )
+    );
 
-    Group::new(vec![Box::new(center_sphere)])
+    Group::new(vec![center_sphere, ground_sphere])
 }
 
 fn get_ray_color<T>(ray: Ray<f64>, world: &T) -> Color

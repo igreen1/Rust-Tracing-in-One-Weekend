@@ -23,12 +23,15 @@ impl Hittable for Group {
     ) -> Option<HitRecord> {
         // O(n) check for each object
         // super inefficient for complex meshes, should use bounding volume hierarchies
-        // let mut closest_so_far = ray_t_max;
+        let mut closest_so_far = ray_t_max;
         let mut hit_record: Option<HitRecord> = None;
 
         for object in &self.objects {
-            match object.hit(ray, ray_t_min, ray_t_max) {
-                Some(new_hit_record) => hit_record = Some(new_hit_record),
+            match object.hit(ray, ray_t_min, closest_so_far) {
+                Some(new_hit_record) => {
+                    closest_so_far = new_hit_record.t;
+                    hit_record = Some(new_hit_record);
+                },
                 None => {}
             }
         }
