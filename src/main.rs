@@ -1,16 +1,13 @@
+use crate::math_utils::interval::Interval;
 use crate::math_utils::point::Point;
 use crate::math_utils::ray::Ray;
 use crate::math_utils::vector::Vec3;
 use crate::ray_tracing::{
     color::Color,
-    shapes::{
-        group::Group,
-        hittable::{Hittable},
-        sphere::Sphere,
-    },
+    shapes::{group::Group, hittable::Hittable, sphere::Sphere},
 };
-use indicatif::ProgressIterator;
 use core::f64;
+use indicatif::ProgressIterator;
 use std::io::Write;
 pub mod math_utils;
 pub mod ray_tracing;
@@ -69,12 +66,7 @@ fn main() {
 
 fn make_world() -> Group {
     let center_sphere = Box::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5));
-    let ground_sphere = Box::new(
-        Sphere::new(
-            Point::new(0.0, -100.5, -2.0),
-            100.0
-        )
-    );
+    let ground_sphere = Box::new(Sphere::new(Point::new(0.0, -100.5, -2.0), 100.0));
 
     Group::new(vec![center_sphere, ground_sphere])
 }
@@ -83,7 +75,7 @@ fn get_ray_color<T>(ray: Ray<f64>, world: &T) -> Color
 where
     T: Hittable,
 {
-    match world.hit(&ray, 0.0, f64::INFINITY) {
+    match world.hit(&ray, Interval::new(0.0, f64::INFINITY)) {
         Some(hit_record) => {
             let color_space_vector = 0.5 * (hit_record.normal + Vec3::new(1., 1., 1.));
             Color::new(

@@ -2,14 +2,12 @@
 
 use core::f64;
 
-
 pub struct Interval {
-    min: f64,
-    max: f64
+    pub min: f64,
+    pub max: f64,
 }
 
 impl Interval {
-
     pub fn new(min: f64, max: f64) -> Interval {
         Interval { min, max }
     }
@@ -31,14 +29,12 @@ impl Interval {
     pub fn surrounds(&self, val: f64) -> bool {
         self.min < val && val < self.max
     }
-
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_simple_interval() {
         let i1 = Interval::new(0.1, 1.2);
@@ -52,12 +48,7 @@ mod tests {
     #[test]
     fn test_empty() {
         let empty_int = Interval::empty();
-        let vals_to_check = vec![
-            0.0,
-            1.0,
-            100000.0,
-            -100000.0
-        ];
+        let vals_to_check = vec![0.0, 1.0, 100000.0, -100000.0];
         for val in vals_to_check {
             assert!(!empty_int.contains(val));
         }
@@ -65,12 +56,7 @@ mod tests {
     #[test]
     fn test_universe() {
         let empty_int = Interval::universe();
-        let vals_to_check = vec![
-            0.0,
-            1.0,
-            100000.0,
-            -100000.0
-        ];
+        let vals_to_check = vec![0.0, 1.0, 100000.0, -100000.0];
         for val in vals_to_check {
             assert!(empty_int.contains(val));
         }

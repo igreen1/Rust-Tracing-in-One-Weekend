@@ -1,3 +1,5 @@
+use crate::math_utils::interval::Interval;
+
 pub struct HitRecord {
     /// The point where the ray hit the object
     pub point: crate::math_utils::point::Point<f64>,
@@ -14,7 +16,6 @@ pub trait Hittable {
     fn hit(
         &self,
         ray: &crate::math_utils::ray::Ray<f64>,
-        ray_t_min: f64,
-        ray_t_max: f64,
+        ray_interval: Interval,
     ) -> Option<HitRecord>;
 }

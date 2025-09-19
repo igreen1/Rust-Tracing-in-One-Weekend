@@ -1,7 +1,7 @@
 //! A sphere shape for ray tracing
 
 use super::hittable::{HitRecord, Hittable};
-use crate::math_utils::{point::Point, ray::Ray};
+use crate::math_utils::{interval::Interval, point::Point, ray::Ray};
 
 pub struct Sphere {
     center: Point<f64>,
@@ -25,8 +25,7 @@ impl Hittable for Sphere {
     fn hit(
         &self,
         ray: &Ray<f64>,
-        ray_t_min: f64,
-        ray_t_max: f64,
+        ray_interval: Interval,
     ) -> Option<crate::ray_tracing::shapes::hittable::HitRecord> {
         // solve our quadratic equation
         let center = self.center;
@@ -45,9 +44,9 @@ impl Hittable for Sphere {
         // check which root is within the acceptable range, if any
         let sqrtd = discriminant.sqrt();
         let t = (h - sqrtd) / a;
-        if t < ray_t_min || t > ray_t_max {
+        if !ray_interval.surrounds(t) {
             let t = (h + sqrtd) / a;
-            if t < ray_t_min || t > ray_t_max {
+            if !ray_interval.surrounds(t) {
                 return None;
             }
         }
