@@ -10,7 +10,7 @@ use crate::ray_tracing::{
     },
 };
 use indicatif::ProgressIterator;
-use std::f64;
+use core::f64;
 use std::io::Write;
 pub mod math_utils;
 pub mod ray_tracing;
