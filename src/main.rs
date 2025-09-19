@@ -1,5 +1,5 @@
 #![warn(clippy::pedantic)] // Enable the pedantic lint group as warnings
-#![warn(clippy::nursery)]  // Enable the nursery lint group as warnings
+#![warn(clippy::nursery)] // Enable the nursery lint group as warnings
 
 pub mod math_utils;
 pub mod ray_tracing;
@@ -25,4 +25,3 @@ fn make_world() -> Group {
 
     Group::new(vec![center_sphere, ground_sphere])
 }
-

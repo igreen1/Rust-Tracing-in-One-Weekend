@@ -1,7 +1,5 @@
 //! The camera class constructs and dispatches rays and uses the results to generate an image
 
-use indicatif::ProgressIterator;
-use std::io::Write;
 use crate::{
     math_utils::{interval::Interval, point::Point, ray::Ray, vector::Vec3},
     ray_tracing::{
@@ -10,24 +8,21 @@ use crate::{
     },
 };
 use core::f64;
-
+use indicatif::ProgressIterator;
+use std::io::Write;
 
 pub struct Camera {
     center: Point<f64>,
-    aspect_ratio: f64,
+    // aspect_ratio: f64,
     image_width: isize,
     image_height: isize,
     pixel_00_loc: Point<f64>,
     pixel_delta_u: Vec3<f64>,
-    pixel_delta_v: Vec3<f64>
+    pixel_delta_v: Vec3<f64>,
 }
 
-
 impl Default for Camera {
-
-
     fn default() -> Self {
-
         let image_width = 100;
         let aspect_ratio = 1.0;
 
@@ -36,13 +31,7 @@ impl Default for Camera {
 }
 
 impl Camera {
-
-    
-    pub fn new(
-        image_width: isize, aspect_ratio: f64
-    ) -> Camera {
-        
-        
+    pub fn new(image_width: isize, aspect_ratio: f64) -> Camera {
         let image_height = (image_width as f64 / aspect_ratio).round() as isize;
         // clamp height to 1 at a minimum
         let image_height = if image_height < 1 { 1 } else { image_height };
@@ -67,16 +56,18 @@ impl Camera {
         let pixel_00_location = viewport_upper_left + 0.5 * (pixel_du + pixel_dv);
         // *** Start Rendering ***
 
-
         Self {
-            center: camera_center, aspect_ratio, image_height, image_width, pixel_00_loc: pixel_00_location, pixel_delta_u: pixel_du, pixel_delta_v: pixel_dv
+            center: camera_center,
+            // aspect_ratio,
+            image_height,
+            image_width,
+            pixel_00_loc: pixel_00_location,
+            pixel_delta_u: pixel_du,
+            pixel_delta_v: pixel_dv,
         }
-
     }
 
     pub fn render(&self, world: Group) {
-
-        
         // File to write
         let mut file_handle = std::fs::File::create("./image.ppm").unwrap();
 
@@ -88,7 +79,8 @@ impl Camera {
                 let row = j as f64;
                 let col = i as f64;
 
-                let pixel_center = self.pixel_00_loc + (col * self.pixel_delta_u) + (row * self.pixel_delta_v);
+                let pixel_center =
+                    self.pixel_00_loc + (col * self.pixel_delta_u) + (row * self.pixel_delta_v);
                 let ray_direction = pixel_center - self.center;
                 let ray = Ray::new(self.center, ray_direction);
 
@@ -96,7 +88,6 @@ impl Camera {
                 write(&mut file_handle, color);
             }
         }
-
     }
 
     fn get_ray_color<T>(&self, ray: Ray<f64>, world: &T) -> Color
@@ -124,8 +115,6 @@ impl Camera {
         }
     }
 }
-
-
 
 /// Utility function to write a color to the file in RGB format
 fn write(file_handle: &mut std::fs::File, color: Color) {
