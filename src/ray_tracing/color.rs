@@ -58,7 +58,7 @@ impl Sub<Color> for Color {
         Color {
             red: self.red - rhs.red,
             green: self.green - rhs.green,
-            blue: self.blue - rhs.blue
+            blue: self.blue - rhs.blue,
         }
     }
 }
@@ -68,7 +68,7 @@ impl Add<Color> for Color {
         Color {
             red: self.red + rhs.red,
             green: self.green + rhs.green,
-            blue: self.blue + rhs.blue
+            blue: self.blue + rhs.blue,
         }
     }
 }

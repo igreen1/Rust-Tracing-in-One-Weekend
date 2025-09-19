@@ -1,6 +1,6 @@
 use num_traits::{Float, Zero};
 use std::cmp::{PartialEq, PartialOrd};
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum VectorError {
@@ -40,7 +40,7 @@ where
 
     /// Calculate the sum of squares of the elements of the 3d vectors
     pub fn magnitude_squared(&self) -> T {
-        return self.dot(self)
+        return self.dot(self);
     }
 
     /// Return a vector with all elements equal to zero
@@ -64,6 +64,21 @@ where
             x: self.x / rhs,
             y: self.y / rhs,
             z: self.z / rhs,
+        }
+    }
+}
+
+impl<T> Neg for Vec3<T>
+where
+    T: Neg<Output = T> + Copy,
+{
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
         }
     }
 }

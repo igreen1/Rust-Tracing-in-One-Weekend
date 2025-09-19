@@ -1,12 +1,19 @@
 use crate::math_utils::point::Point;
 use crate::math_utils::ray::Ray;
 use crate::math_utils::vector::Vec3;
-use crate::ray_tracing::color::Color;
+use crate::ray_tracing::{
+    color::Color,
+    shapes::{
+        group::Group,
+        hittable::{Hittable},
+        sphere::Sphere,
+    },
+};
 use indicatif::ProgressIterator;
+use std::f64;
 use std::io::Write;
 pub mod math_utils;
 pub mod ray_tracing;
-use ray_tracing::shapes::Sphere;
 
 fn main() {
     // *** Start Setup ***
@@ -31,10 +38,13 @@ fn main() {
     let pixel_du = viewport_u / (image_width as f64);
     let pixel_dv = viewport_v / (image_height as f64);
 
-    let viewport_upper_left =camera_center
-                             - Vec3::new(0., 0., focal_length) - viewport_u/2. - viewport_v/2.;
+    let viewport_upper_left =
+        camera_center - Vec3::new(0., 0., focal_length) - viewport_u / 2. - viewport_v / 2.;
     let pixel_00_location = viewport_upper_left + 0.5 * (pixel_du + pixel_dv);
     // *** Start Rendering ***
+
+    // get the objects we're rendering in the world
+    let world = make_world();
 
     // File to write
     let mut file_handle = std::fs::File::create("./image.ppm").unwrap();
@@ -51,40 +61,41 @@ fn main() {
             let ray_direction = pixel_center - camera_center;
             let ray = Ray::new(camera_center, ray_direction);
 
-            let color = get_ray_color(ray);
+            let color = get_ray_color(ray, &world);
             write(&mut file_handle, color);
         }
     }
 }
 
-fn get_ray_color(ray: Ray<f64>) -> Color {
+fn make_world() -> Group {
+    let center_sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
 
-    let sphere = Sphere::new(
-        // in right hand coordinate system, "z is negative into the screen"
-        // so as we go further away, z should get more negative
-        // so somewhere, my zs are fucked up
-        Point::new(0.0, 0.0, -1.), 
-        0.5
-    );
-    let t = sphere.hit_sphere(&ray);
-    if t > 0.0{
-        return Color::new(1.0, 0.0, 0.0).unwrap();
+    Group::new(vec![Box::new(center_sphere)])
+}
 
-        // let N = (ray.at(t) - Vec3::new(0.0, 0.0, -1.0));
-        // let norm_vec = Vec3::new(N.x, N.y, N.z).normalize().unwrap();
-        // return 0.5 * Color::new(
-        //     norm_vec.x + 1.0,
-        //     norm_vec.y + 1.0,
-        //     norm_vec.z + 1.0
-        // ).unwrap()
+fn get_ray_color<T>(ray: Ray<f64>, world: &T) -> Color
+where
+    T: Hittable,
+{
+    match world.hit(&ray, 0.0, f64::INFINITY) {
+        Some(hit_record) => {
+            let color_space_vector = 0.5 * (hit_record.normal + Vec3::new(1., 1., 1.));
+            Color::new(
+                color_space_vector.x,
+                color_space_vector.y,
+                color_space_vector.z,
+            )
+            .unwrap()
+        }
+        None => {
+            // default blue to white fade
+            let unit_direction = (*ray.get_direction()).normalize().unwrap();
+            let a = 0.5 * (unit_direction.y + 1.0);
+            let start_fade = (1.0 - a) * Color::new(1.0, 1.0, 1.0).unwrap();
+            let end_fade = a * Color::new(0.5, 0.7, 1.0).unwrap();
+            start_fade + end_fade
+        }
     }
-    let unit_direction = (*ray.get_direction()).normalize().unwrap();
-
-    let a = 0.5 * (unit_direction.y + 1.0);
-    let start_fade = (1.0 - a) * Color::new(1.0, 1.0, 1.0).unwrap();
-    let end_fade = a * Color::new(0.5, 0.7, 1.0).unwrap();
-    start_fade + end_fade
-
 }
 
 pub fn write(file_handle: &mut std::fs::File, color: Color) {
