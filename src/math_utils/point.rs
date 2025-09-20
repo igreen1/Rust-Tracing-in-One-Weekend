@@ -12,7 +12,7 @@ pub struct Point<T> {
 
 impl<T> Point<T> {
     /// Create a new point in 3d space
-    pub fn new(x: T, y: T, z: T) -> Point<T> {
+    pub const fn new(x: T, y: T, z: T) -> Point<T> {
         Point { x, y, z }
     }
 }

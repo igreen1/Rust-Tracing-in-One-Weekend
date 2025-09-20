@@ -8,26 +8,36 @@ pub struct Interval {
 }
 
 impl Interval {
-    pub fn new(min: f64, max: f64) -> Interval {
+    pub const fn new(min: f64, max: f64) -> Interval {
         Interval { min, max }
     }
 
-    pub fn universe() -> Interval {
+    pub const fn universe() -> Interval {
         Interval::new(-f64::INFINITY, f64::INFINITY)
     }
 
-    pub fn empty() -> Interval {
+    pub const fn empty() -> Interval {
         Interval::new(f64::INFINITY, -f64::INFINITY)
     }
 
     /// Checks if value is in [min, max] (aka inclusive)
-    pub fn contains(&self, val: f64) -> bool {
+    pub const fn contains(&self, val: f64) -> bool {
         self.min <= val && val <= self.max
     }
 
     /// Stricter version of `contains`. Checks for (min, max) (aka exclusive)
-    pub fn surrounds(&self, val: f64) -> bool {
+    pub const fn surrounds(&self, val: f64) -> bool {
         self.min < val && val < self.max
+    }
+
+    pub const fn clamp(&self, x: f64) -> f64 {
+        if x < self.min {
+            self.min
+        } else if x > self.max {
+            self.max
+        } else {
+            x
+        }
     }
 }
 

@@ -1,23 +1,25 @@
 use super::{point::Point, vector::Vec3};
 use std::ops::{Add, Mul};
+
+#[derive(Debug, Clone, Copy)]
 pub struct Ray<T> {
     origin: Point<T>,
     direction: Vec3<T>,
 }
 
 impl<T> Ray<T> {
-    pub fn new(origin: Point<T>, direction: Vec3<T>) -> Ray<T> {
+    pub const fn new(origin: Point<T>, direction: Vec3<T>) -> Ray<T> {
         Ray {
             origin: origin,
             direction: direction,
         }
     }
 
-    pub fn get_direction(&self) -> &Vec3<T> {
+    pub const fn get_direction(&self) -> &Vec3<T> {
         &self.direction
     }
 
-    pub fn get_origin(&self) -> &Point<T> {
+    pub const fn get_origin(&self) -> &Point<T> {
         &self.origin
     }
 }

@@ -9,14 +9,14 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(center: Point<f64>, radius: f64) -> Sphere {
+    pub const fn new(center: Point<f64>, radius: f64) -> Sphere {
         Sphere { center, radius }
     }
 
-    pub fn get_center(&self) -> Point<f64> {
+    pub const fn get_center(&self) -> Point<f64> {
         self.center
     }
-    pub fn get_radius(&self) -> f64 {
+    pub const fn get_radius(&self) -> f64 {
         self.radius
     }
 }

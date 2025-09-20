@@ -20,7 +20,7 @@ where
     T: Add<Output = T> + Mul<Output = T> + Sub<Output = T> + Copy + Zero,
 {
     /// Create a new vector
-    pub fn new(x: T, y: T, z: T) -> Vec3<T> {
+    pub const fn new(x: T, y: T, z: T) -> Vec3<T> {
         Vec3 { x, y, z }
     }
 

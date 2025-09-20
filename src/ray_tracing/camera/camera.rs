@@ -19,19 +19,21 @@ pub struct Camera {
     pixel_00_loc: Point<f64>,
     pixel_delta_u: Vec3<f64>,
     pixel_delta_v: Vec3<f64>,
+    samples_per_pixel: isize,
 }
 
 impl Default for Camera {
     fn default() -> Self {
         let image_width = 100;
         let aspect_ratio = 1.0;
-
-        Camera::new(image_width, aspect_ratio)
+        let samples_per_pixel = 10;
+        
+        Camera::new(image_width, aspect_ratio, samples_per_pixel)
     }
 }
 
 impl Camera {
-    pub fn new(image_width: isize, aspect_ratio: f64) -> Camera {
+    pub fn new(image_width: isize, aspect_ratio: f64, samples_per_pixel: isize) -> Camera {
         let image_height = (image_width as f64 / aspect_ratio).round() as isize;
         // clamp height to 1 at a minimum
         let image_height = if image_height < 1 { 1 } else { image_height };
@@ -64,6 +66,7 @@ impl Camera {
             pixel_00_loc: pixel_00_location,
             pixel_delta_u: pixel_du,
             pixel_delta_v: pixel_dv,
+            samples_per_pixel,
         }
     }
 
@@ -73,19 +76,28 @@ impl Camera {
 
         let header = format!("P3\n{} {}\n255\n", self.image_width, self.image_height).into_bytes();
         file_handle.write_all(&header).unwrap();
+        
+        let pixel_sample_scale = 1.0 / (self.samples_per_pixel as f64);
 
         for j in (0..self.image_height).progress() {
             for i in 0..self.image_width {
                 let row = j as f64;
                 let col = i as f64;
 
-                let pixel_center =
-                    self.pixel_00_loc + (col * self.pixel_delta_u) + (row * self.pixel_delta_v);
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray::new(self.center, ray_direction);
+                // let pixel_center =
+                //     self.pixel_00_loc + (col * self.pixel_delta_u) + (row * self.pixel_delta_v);
+                // let ray_direction = pixel_center - self.center;
+                // let ray = Ray::new(self.center, ray_direction);
 
-                let color = self.get_ray_color(ray, &world);
-                write(&mut file_handle, color);
+                // let color = self.get_ray_color(ray, &world);
+
+                let mut color = Color::new(0.0, 0.0, 0.0).unwrap();
+                for _ in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(col, row);
+                    color = color +self.get_ray_color(ray.clone(), &world);
+                }
+
+                write(&mut file_handle, color * pixel_sample_scale);
             }
         }
     }
@@ -113,6 +125,24 @@ impl Camera {
                 start_fade + end_fade
             }
         }
+    }
+
+    fn get_ray(&self, i: f64, j: f64) -> Ray<f64> {
+        let offset = Camera::sample_square();
+        let ray_origin = self.center;
+        let pixel_center =
+            self.pixel_00_loc + ((i + offset.x) * self.pixel_delta_u) + ((j + offset.y) * self.pixel_delta_v);
+        let ray_direction = pixel_center - self.center;
+
+        Ray::new(ray_origin, ray_direction)
+    }
+
+    fn sample_square() -> Vec3<f64> {
+        Vec3::new(
+            rand::random_range(-0.5..0.5),
+            rand::random_range(-0.5..0.5),
+            0.0,
+        )
     }
 }
 

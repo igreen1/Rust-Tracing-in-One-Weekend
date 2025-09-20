@@ -1,5 +1,7 @@
 /// RGB represenation
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
+
+use crate::math_utils::interval::Interval;
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct Color {
@@ -23,9 +25,10 @@ impl Color {
     }
 
     pub fn to_byte_rgb(&self) -> (u8, u8, u8) {
-        let red_byte = (self.red * 255.99).round() as u8;
-        let green_byte = (self.green * 255.99).round() as u8;
-        let blue_byte = (self.blue * 255.99).round() as u8;
+        const COLOR_INTENSITY: Interval = Interval::new(0.000, 1.0);
+        let red_byte = (COLOR_INTENSITY.clamp(self.red) * 255.0) as u8;
+        let green_byte = (COLOR_INTENSITY.clamp(self.green) * 255.0) as u8;
+        let blue_byte = (COLOR_INTENSITY.clamp(self.blue) * 255.0) as u8;
         return (red_byte, green_byte, blue_byte);
     }
 }
@@ -70,5 +73,21 @@ impl Add<Color> for Color {
             green: self.green + rhs.green,
             blue: self.blue + rhs.blue,
         }
+    }
+}
+
+impl AddAssign<Color> for Color {
+    fn add_assign(&mut self, rhs: Color) {
+        self.red += rhs.red;
+        self.green += rhs.green;
+        self.blue += rhs.blue;
+    }
+}
+
+impl MulAssign<f64> for Color {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.red *= rhs;
+        self.green *= rhs;
+        self.blue *= rhs;
     }
 }
