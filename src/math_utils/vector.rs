@@ -124,6 +124,45 @@ impl<T: Float> Vec3<T> {
     }
 }
 
+impl Vec3<f64> {
+
+    pub fn random() -> Vec3<f64> {
+        Vec3::new(
+            rand::random(), rand::random(), rand::random()
+        )
+    }
+
+    pub fn random_in_range(min: f64, max: f64) -> Vec3<f64> {
+        Vec3::new(
+            rand::random_range(min..max),
+            rand::random_range(min..max),
+            rand::random_range(min..max),
+        )
+    }
+
+    pub fn random_unit_vector() -> Vec3<f64> {
+        const FLOAT_EPSILON: f64 = 1e-160;
+        loop {
+            let p = Vec3::random();
+            let lensq = p.magnitude_squared();
+            if lensq <= 1.0 && lensq > FLOAT_EPSILON {
+                return p / lensq.sqrt();
+            }
+        }
+    }
+
+    pub fn random_unit_vector_same_hemisphere(reference_vector: &Vec3<f64>) -> Vec3<f64> {
+        let rand_unit_vector = Vec3::random_unit_vector();
+
+        if rand_unit_vector.dot(reference_vector) > 0.0 {
+            rand_unit_vector
+        } else {
+            - rand_unit_vector
+        }
+    }
+
+}
+
 impl<T> Add<Vec3<T>> for Vec3<T>
 where
     T: Add<Output = T>,

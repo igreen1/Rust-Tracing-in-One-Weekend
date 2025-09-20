@@ -20,20 +20,22 @@ pub struct Camera {
     pixel_delta_u: Vec3<f64>,
     pixel_delta_v: Vec3<f64>,
     samples_per_pixel: isize,
+    max_depth: isize,
 }
 
 impl Default for Camera {
     fn default() -> Self {
-        let image_width = 100;
+        let image_width = 200;
         let aspect_ratio = 1.0;
-        let samples_per_pixel = 10;
+        let samples_per_pixel = 200;
+        let max_depth = 10;
         
-        Camera::new(image_width, aspect_ratio, samples_per_pixel)
+        Camera::new(image_width, aspect_ratio, samples_per_pixel, max_depth)
     }
 }
 
 impl Camera {
-    pub fn new(image_width: isize, aspect_ratio: f64, samples_per_pixel: isize) -> Camera {
+    pub fn new(image_width: isize, aspect_ratio: f64, samples_per_pixel: isize, max_depth: isize) -> Camera {
         let image_height = (image_width as f64 / aspect_ratio).round() as isize;
         // clamp height to 1 at a minimum
         let image_height = if image_height < 1 { 1 } else { image_height };
@@ -67,6 +69,7 @@ impl Camera {
             pixel_delta_u: pixel_du,
             pixel_delta_v: pixel_dv,
             samples_per_pixel,
+            max_depth
         }
     }
 
@@ -94,7 +97,7 @@ impl Camera {
                 let mut color = Color::new(0.0, 0.0, 0.0).unwrap();
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(col, row);
-                    color = color +self.get_ray_color(ray.clone(), &world);
+                    color = color +self.get_ray_color(ray.clone(), &world, self.max_depth);
                 }
 
                 write(&mut file_handle, color * pixel_sample_scale);
@@ -102,19 +105,28 @@ impl Camera {
         }
     }
 
-    fn get_ray_color<T>(&self, ray: Ray<f64>, world: &T) -> Color
+    fn get_ray_color<T>(&self, ray: Ray<f64>, world: &T, remaining_bounces: isize) -> Color
     where
         T: Hittable,
     {
-        match world.hit(&ray, Interval::new(0.0, f64::INFINITY)) {
+        const MIN_HIT_DISTANCE: f64 = 0.001;
+        match world.hit(&ray, Interval::new(MIN_HIT_DISTANCE, f64::INFINITY)) {
             Some(hit_record) => {
-                let color_space_vector = 0.5 * (hit_record.normal + Vec3::new(1., 1., 1.));
-                Color::new(
-                    color_space_vector.x,
-                    color_space_vector.y,
-                    color_space_vector.z,
-                )
-                .unwrap()
+                let direction = Vec3::random_unit_vector_same_hemisphere(&hit_record.normal);
+                
+                let bounce_ray = Ray::new(
+                    hit_record.point,
+                    direction
+                );
+                0.5 * self.get_ray_color(bounce_ray, world, remaining_bounces-1)
+
+                // let color_space_vector = 0.5 * (hit_record.normal + Vec3::new(1., 1., 1.));
+                // Color::new(
+                //     color_space_vector.x,
+                //     color_space_vector.y,
+                //     color_space_vector.z,
+                // )
+                // .unwrap()
             }
             None => {
                 // default blue to white fade
