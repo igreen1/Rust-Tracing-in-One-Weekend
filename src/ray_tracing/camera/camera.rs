@@ -27,15 +27,20 @@ impl Default for Camera {
     fn default() -> Self {
         let image_width = 200;
         let aspect_ratio = 1.0;
-        let samples_per_pixel = 200;
+        let samples_per_pixel = 10;
         let max_depth = 10;
-        
+
         Camera::new(image_width, aspect_ratio, samples_per_pixel, max_depth)
     }
 }
 
 impl Camera {
-    pub fn new(image_width: isize, aspect_ratio: f64, samples_per_pixel: isize, max_depth: isize) -> Camera {
+    pub fn new(
+        image_width: isize,
+        aspect_ratio: f64,
+        samples_per_pixel: isize,
+        max_depth: isize,
+    ) -> Camera {
         let image_height = (image_width as f64 / aspect_ratio).round() as isize;
         // clamp height to 1 at a minimum
         let image_height = if image_height < 1 { 1 } else { image_height };
@@ -69,7 +74,7 @@ impl Camera {
             pixel_delta_u: pixel_du,
             pixel_delta_v: pixel_dv,
             samples_per_pixel,
-            max_depth
+            max_depth,
         }
     }
 
@@ -79,7 +84,7 @@ impl Camera {
 
         let header = format!("P3\n{} {}\n255\n", self.image_width, self.image_height).into_bytes();
         file_handle.write_all(&header).unwrap();
-        
+
         let pixel_sample_scale = 1.0 / (self.samples_per_pixel as f64);
 
         for j in (0..self.image_height).progress() {
@@ -97,7 +102,7 @@ impl Camera {
                 let mut color = Color::new(0.0, 0.0, 0.0).unwrap();
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(col, row);
-                    color = color +self.get_ray_color(ray.clone(), &world, self.max_depth);
+                    color = color + self.get_ray_color(ray.clone(), &world, self.max_depth);
                 }
 
                 write(&mut file_handle, color * pixel_sample_scale);
@@ -110,23 +115,17 @@ impl Camera {
         T: Hittable,
     {
         const MIN_HIT_DISTANCE: f64 = 0.001;
+
+        if remaining_bounces <= 0 {
+            return Color::new(0.0, 0.0, 0.0).unwrap();
+        }
+
         match world.hit(&ray, Interval::new(MIN_HIT_DISTANCE, f64::INFINITY)) {
             Some(hit_record) => {
                 let direction = Vec3::random_unit_vector_same_hemisphere(&hit_record.normal);
-                
-                let bounce_ray = Ray::new(
-                    hit_record.point,
-                    direction
-                );
-                0.5 * self.get_ray_color(bounce_ray, world, remaining_bounces-1)
-
-                // let color_space_vector = 0.5 * (hit_record.normal + Vec3::new(1., 1., 1.));
-                // Color::new(
-                //     color_space_vector.x,
-                //     color_space_vector.y,
-                //     color_space_vector.z,
-                // )
-                // .unwrap()
+                let direction = direction + hit_record.normal;
+                let bounce_ray = Ray::new(hit_record.point, direction);
+                0.5 * self.get_ray_color(bounce_ray, world, remaining_bounces - 1)
             }
             None => {
                 // default blue to white fade
@@ -142,8 +141,9 @@ impl Camera {
     fn get_ray(&self, i: f64, j: f64) -> Ray<f64> {
         let offset = Camera::sample_square();
         let ray_origin = self.center;
-        let pixel_center =
-            self.pixel_00_loc + ((i + offset.x) * self.pixel_delta_u) + ((j + offset.y) * self.pixel_delta_v);
+        let pixel_center = self.pixel_00_loc
+            + ((i + offset.x) * self.pixel_delta_u)
+            + ((j + offset.y) * self.pixel_delta_v);
         let ray_direction = pixel_center - self.center;
 
         Ray::new(ray_origin, ray_direction)

@@ -125,11 +125,8 @@ impl<T: Float> Vec3<T> {
 }
 
 impl Vec3<f64> {
-
     pub fn random() -> Vec3<f64> {
-        Vec3::new(
-            rand::random(), rand::random(), rand::random()
-        )
+        Vec3::new(rand::random(), rand::random(), rand::random())
     }
 
     pub fn random_in_range(min: f64, max: f64) -> Vec3<f64> {
@@ -157,10 +154,9 @@ impl Vec3<f64> {
         if rand_unit_vector.dot(reference_vector) > 0.0 {
             rand_unit_vector
         } else {
-            - rand_unit_vector
+            -rand_unit_vector
         }
     }
-
 }
 
 impl<T> Add<Vec3<T>> for Vec3<T>
