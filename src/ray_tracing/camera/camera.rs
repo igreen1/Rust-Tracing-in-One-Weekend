@@ -25,9 +25,9 @@ pub struct Camera {
 
 impl Default for Camera {
     fn default() -> Self {
-        let image_width = 200;
-        let aspect_ratio = 1.0;
-        let samples_per_pixel = 10;
+        let image_width = 1000;
+        let aspect_ratio = 16.0/9.0;
+        let samples_per_pixel = 30;
         let max_depth = 10;
 
         Camera::new(image_width, aspect_ratio, samples_per_pixel, max_depth)
@@ -121,12 +121,26 @@ impl Camera {
         }
 
         match world.hit(&ray, Interval::new(MIN_HIT_DISTANCE, f64::INFINITY)) {
+            // if we hit something
             Some(hit_record) => {
-                let direction = Vec3::random_unit_vector_same_hemisphere(&hit_record.normal);
-                let direction = direction + hit_record.normal;
-                let bounce_ray = Ray::new(hit_record.point, direction);
-                0.5 * self.get_ray_color(bounce_ray, world, remaining_bounces - 1)
+                // then scatter off that something
+                match hit_record.material.scatter(ray, &hit_record) {
+                    // if the scatterer produces a valid scatter
+                    Some((scattered_ray, attenuation)) => {
+                        let scatter_result =
+                            self.get_ray_color(scattered_ray, world, remaining_bounces - 1);
+                        Color::new(
+                            attenuation.red * scatter_result.red,
+                            attenuation.green * scatter_result.green,
+                            attenuation.blue * scatter_result.blue,
+                        )
+                        .unwrap()
+                    }
+                    // else no way to scatter so return black
+                    None => Color::new(0.0, 0.0, 0.0).unwrap(),
+                }
             }
+            // hit nothing, so grab thge background color (diffuse light source)
             None => {
                 // default blue to white fade
                 let unit_direction = (*ray.get_direction()).normalize().unwrap();
@@ -160,7 +174,7 @@ impl Camera {
 
 /// Utility function to write a color to the file in RGB format
 fn write(file_handle: &mut std::fs::File, color: Color) {
-    let (rbyte, gbyte, bbyte) = color.to_byte_rgb();
+    let (rbyte, gbyte, bbyte) = color.to_bytes_rgb();
     let output_row = format!("{} {} {}\n", rbyte, gbyte, bbyte).into_bytes();
     file_handle.write_all(&output_row).unwrap();
 }

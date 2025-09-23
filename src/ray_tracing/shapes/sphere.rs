@@ -1,16 +1,26 @@
 //! A sphere shape for ray tracing
 
+use std::rc::Rc;
+
 use super::hittable::{HitRecord, Hittable};
-use crate::math_utils::{interval::Interval, point::Point, ray::Ray};
+use crate::{
+    math_utils::{interval::Interval, point::Point, ray::Ray},
+    ray_tracing::materials::material::Scatterer,
+};
 
 pub struct Sphere {
     center: Point<f64>,
     radius: f64,
+    material: Rc<dyn Scatterer>,
 }
 
 impl Sphere {
-    pub const fn new(center: Point<f64>, radius: f64) -> Sphere {
-        Sphere { center, radius }
+    pub const fn new(center: Point<f64>, radius: f64, material: Rc<dyn Scatterer>) -> Sphere {
+        Sphere {
+            center,
+            radius,
+            material,
+        }
     }
 
     pub const fn get_center(&self) -> Point<f64> {
@@ -65,6 +75,7 @@ impl Hittable for Sphere {
             normal,
             t,
             front_face,
+            material: self.material.clone(),
         })
     }
 }

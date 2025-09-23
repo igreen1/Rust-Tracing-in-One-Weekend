@@ -16,7 +16,7 @@ pub enum ColorError {
 }
 
 impl Color {
-    pub fn new(red: f64, green: f64, blue: f64) -> Result<Color, ColorError> {
+    pub const fn new(red: f64, green: f64, blue: f64) -> Result<Color, ColorError> {
         if red > 1.0 || red < 0. || green > 1. || green < 0. || blue > 1. || blue < 0. {
             Err(ColorError::InvalidColorRange)
         } else {
@@ -24,12 +24,31 @@ impl Color {
         }
     }
 
-    pub fn to_byte_rgb(&self) -> (u8, u8, u8) {
+    pub const fn to_bytes_rgb(&self) -> (u8, u8, u8) {
         const COLOR_INTENSITY: Interval = Interval::new(0.000, 1.0);
         let red_byte = (COLOR_INTENSITY.clamp(self.red) * 255.0) as u8;
         let green_byte = (COLOR_INTENSITY.clamp(self.green) * 255.0) as u8;
         let blue_byte = (COLOR_INTENSITY.clamp(self.blue) * 255.0) as u8;
         return (red_byte, green_byte, blue_byte);
+    }
+
+    pub fn to_gamma_bytes_rgb(&self) -> (u8, u8, u8) {
+        Color::new(
+            Color::linear_to_gamma(self.red),
+            Color::linear_to_gamma(self.green),
+            Color::linear_to_gamma(self.blue),
+        )
+        .unwrap()
+        .to_bytes_rgb()
+    }
+
+    /// Update from linear to gamma space for image storage
+    fn linear_to_gamma(linear_component: f64) -> f64 {
+        if linear_component > 0.0 {
+            linear_component.sqrt()
+        } else {
+            0.0
+        }
     }
 }
 

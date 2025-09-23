@@ -1,4 +1,6 @@
-use crate::math_utils::interval::Interval;
+use std::rc::Rc;
+
+use crate::{math_utils::interval::Interval, ray_tracing::materials::material::Scatterer};
 
 pub struct HitRecord {
     /// The point where the ray hit the object
@@ -10,6 +12,8 @@ pub struct HitRecord {
     pub t: f64,
     /// Whether the hit was on the front face of the object
     pub front_face: bool,
+    // the material of the object that was hit
+    pub material: Rc<dyn Scatterer>,
 }
 
 pub trait Hittable {

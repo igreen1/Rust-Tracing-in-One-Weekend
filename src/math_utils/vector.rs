@@ -157,6 +157,16 @@ impl Vec3<f64> {
             -rand_unit_vector
         }
     }
+
+    pub fn near_zero(&self) -> bool {
+        const FLOAT_EPSILON: f64 = 1e-8;
+        self.x.abs() < FLOAT_EPSILON && self.y.abs() < FLOAT_EPSILON && self.z.abs() < FLOAT_EPSILON
+    }
+
+    /// Perform a perfect reflection off a surface per Snell's law
+    pub fn snell_reflection(&self, surface_normal: &Vec3<f64>) -> Vec3<f64> {
+        return *self - (2.0 * self.dot(surface_normal) * (*surface_normal));
+    }
 }
 
 impl<T> Add<Vec3<T>> for Vec3<T>
