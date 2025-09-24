@@ -92,12 +92,6 @@ impl Camera {
                 let row = j as f64;
                 let col = i as f64;
 
-                // let pixel_center =
-                //     self.pixel_00_loc + (col * self.pixel_delta_u) + (row * self.pixel_delta_v);
-                // let ray_direction = pixel_center - self.center;
-                // let ray = Ray::new(self.center, ray_direction);
-
-                // let color = self.get_ray_color(ray, &world);
 
                 let mut color = Color::new(0.0, 0.0, 0.0).unwrap();
                 for _ in 0..self.samples_per_pixel {

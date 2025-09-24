@@ -32,8 +32,7 @@ impl Scatterer for DielectricMaterial {
 
         let direction = if ri * sin_theta > 1.0 {
             // cannot refract
-            unit_direction.refract(&hit_record.normal, ri)
-            // unit_direction.reflect(&hit_record.normal)
+            unit_direction.reflect(&hit_record.normal)
         } else {
             unit_direction.refract(&hit_record.normal, ri)
         };
