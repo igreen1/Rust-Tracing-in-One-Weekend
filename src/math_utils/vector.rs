@@ -162,10 +162,19 @@ impl Vec3<f64> {
         const FLOAT_EPSILON: f64 = 1e-8;
         self.x.abs() < FLOAT_EPSILON && self.y.abs() < FLOAT_EPSILON && self.z.abs() < FLOAT_EPSILON
     }
-
+    
     /// Perform a perfect reflection off a surface per Snell's law
-    pub fn snell_reflection(&self, surface_normal: &Vec3<f64>) -> Vec3<f64> {
+    pub fn reflect(&self, surface_normal: &Vec3<f64>) -> Vec3<f64> {
         return *self - (2.0 * self.dot(surface_normal) * (*surface_normal));
+    }
+
+    pub fn refract(&self, normal: &Vec3<f64>, etai_over_etat: f64) -> Vec3<f64> {
+        let n = normal.normalize().unwrap();
+        let uv = self.normalize().unwrap();
+        let cos_theta = -(n.dot(&uv));//.min(1.0);            
+        let r_out_perp = etai_over_etat * (uv + cos_theta * n);
+        let r_out_parallel = -(1.0 - r_out_perp.magnitude_squared()).abs().sqrt() * n;
+        return r_out_perp + r_out_parallel;
     }
 }
 

@@ -53,9 +53,9 @@ impl Hittable for Sphere {
 
         // check which root is within the acceptable range, if any
         let sqrtd = discriminant.sqrt();
-        let t = (h - sqrtd) / a;
+        let mut t = (h - sqrtd) / a;
         if !ray_interval.surrounds(t) {
-            let t = (h + sqrtd) / a;
+            t = (h + sqrtd) / a;
             if !ray_interval.surrounds(t) {
                 return None;
             }

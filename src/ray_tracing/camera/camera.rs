@@ -25,10 +25,10 @@ pub struct Camera {
 
 impl Default for Camera {
     fn default() -> Self {
-        let image_width = 1000;
-        let aspect_ratio = 16.0/9.0;
-        let samples_per_pixel = 30;
-        let max_depth = 10;
+        let image_width = 500;
+        let aspect_ratio = 16.0 / 9.0;
+        let samples_per_pixel = 10;
+        let max_depth = 20;
 
         Camera::new(image_width, aspect_ratio, samples_per_pixel, max_depth)
     }
@@ -114,7 +114,7 @@ impl Camera {
     where
         T: Hittable,
     {
-        const MIN_HIT_DISTANCE: f64 = 0.001;
+        const MIN_HIT_DISTANCE: f64 = 0.01;
 
         if remaining_bounces <= 0 {
             return Color::new(0.0, 0.0, 0.0).unwrap();
