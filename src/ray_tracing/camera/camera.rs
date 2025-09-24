@@ -92,7 +92,6 @@ impl Camera {
                 let row = j as f64;
                 let col = i as f64;
 
-
                 let mut color = Color::new(0.0, 0.0, 0.0).unwrap();
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(col, row);

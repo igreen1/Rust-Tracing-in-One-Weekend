@@ -29,7 +29,7 @@ fn make_world() -> Group {
     // green ground
     let material_ground = LambertianMaterial::new(Color::new(0.8, 0.8, 0.0).unwrap());
     let material_center = LambertianMaterial::new(Color::new(0.1, 0.2, 0.5).unwrap());
-    let material_left = DielectricMaterial::new(1.0/1.33);
+    let material_left = DielectricMaterial::new(1.0 / 1.33);
     // let material_left = MetalMaterial::new(Color::new(0.8, 0.8, 0.8).unwrap());
     let material_right = MetalMaterial::new(Color::new(0.8, 0.6, 0.2).unwrap());
 
