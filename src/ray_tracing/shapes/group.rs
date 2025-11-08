@@ -4,11 +4,11 @@ use super::hittable::{HitRecord, Hittable};
 use crate::math_utils::interval::Interval;
 
 pub struct Group {
-    objects: Vec<Box<dyn Hittable>>,
+    objects: Vec<Box<dyn Hittable + Send + Sync>>,
 }
 
 impl Group {
-    pub fn new(hittable_objects: Vec<Box<dyn Hittable>>) -> Group {
+    pub fn new(hittable_objects: Vec<Box<dyn Hittable + Send + Sync>>) -> Group {
         Group {
             objects: hittable_objects,
         }

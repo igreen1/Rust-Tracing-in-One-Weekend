@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{math_utils::interval::Interval, ray_tracing::materials::material::Scatterer};
 
@@ -13,10 +13,10 @@ pub struct HitRecord {
     /// Whether the hit was on the front face of the object
     pub front_face: bool,
     // the material of the object that was hit
-    pub material: Rc<dyn Scatterer>,
+    pub material: Arc<dyn Scatterer + Send + Sync>,
 }
 
-pub trait Hittable {
+pub trait Hittable: Sync {
     fn hit(
         &self,
         ray: &crate::math_utils::ray::Ray<f64>,

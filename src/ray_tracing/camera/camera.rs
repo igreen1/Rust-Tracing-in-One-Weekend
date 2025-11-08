@@ -8,9 +8,12 @@ use crate::{
     },
 };
 use core::f64;
-use indicatif::ProgressIterator;
+use indicatif::ParallelProgressIterator;
+use rayon::prelude::*;
 use std::io::Write;
+use std::sync::Arc;
 
+#[derive(Clone, Copy)]
 pub struct Camera {
     center: Point<f64>,
     // aspect_ratio: f64,
@@ -21,16 +24,68 @@ pub struct Camera {
     pixel_delta_v: Vec3<f64>,
     samples_per_pixel: isize,
     max_depth: isize,
+    basis_vectors: Vec3<Vec3<f64>>,
+    // vertical_fov: f64,
+}
+
+/// Make it a bit easier to create a camera by letting a user
+/// set some elements in a stream-like manner
+pub struct CameraBuilder {
+    pub image_width: isize,
+    pub aspect_ratio: f64,
+    pub samples_per_pixel: isize,
+    pub max_depth: isize,
+    pub vertical_fov: f64,
+    pub lookfrom: Point<f64>,
+    pub lookat: Point<f64>
+
+}
+
+impl CameraBuilder {
+
+    pub fn make_camera(&self) -> Camera {
+        Camera::new(
+            self.image_width,
+            self.aspect_ratio,
+            self.samples_per_pixel,
+            self.max_depth,
+            self.vertical_fov,
+            self.lookfrom,
+            self.lookat,
+        )
+    }
+
+    pub fn set_look_at(&self, look_at: Point<f64>) -> Self {
+        CameraBuilder { lookat: look_at, ..(*self) }
+    }
+
+    pub fn set_look_from(&self, x: f64, y: f64, z: f64) -> Self {
+        let look_from = Point::new(x, y, z);
+        CameraBuilder { lookfrom: look_from, ..(*self) }
+    }
+
+}
+
+impl Default for CameraBuilder {
+    fn default() -> Self {
+        let image_width = 500;
+        let aspect_ratio = 16.0 / 9.0;
+        let samples_per_pixel = 100;
+        let max_depth = 50;
+
+        let vertical_fov: f64 = 20.;
+
+        // flat looking along the z axis
+        let lookfrom = Point::<f64>::new(0., 0., 0.);
+        let lookat = Point::<f64>::new(0., 0., -1.0);
+        
+        CameraBuilder { image_width, aspect_ratio, samples_per_pixel, max_depth, vertical_fov, lookfrom, lookat }
+    }
 }
 
 impl Default for Camera {
     fn default() -> Self {
-        let image_width = 500;
-        let aspect_ratio = 16.0 / 9.0;
-        let samples_per_pixel = 10;
-        let max_depth = 20;
-
-        Camera::new(image_width, aspect_ratio, samples_per_pixel, max_depth)
+        CameraBuilder::default().make_camera()
     }
 }
 
@@ -40,33 +95,48 @@ impl Camera {
         aspect_ratio: f64,
         samples_per_pixel: isize,
         max_depth: isize,
+        vertical_fov: f64,
+        lookfrom: Point<f64>,
+        lookat: Point<f64>
     ) -> Camera {
         let image_height = (image_width as f64 / aspect_ratio).round() as isize;
         // clamp height to 1 at a minimum
         let image_height = if image_height < 1 { 1 } else { image_height };
 
+        // create camera constants
+        let focal_length = (lookfrom - lookat).magnitude();
+        println!("{:?}", focal_length);
+
         // create the viewport
         let image_aspect_ratio = image_width as f64 / image_height as f64;
-        let viewport_height = 2.0;
+
+        let theta = vertical_fov.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
+
         let viewport_width = viewport_height * image_aspect_ratio;
+        
+        // make the camera basis vectors
+        let vup = Vec3::<f64>::new(0., 1., 0.);
+        let w = (lookfrom - lookat).normalize().unwrap();
+        let u = vup.cross(&w).normalize().unwrap();
+        let v = w.cross(&u);//.normalize().unwrap();
 
-        // create camera constants
-        let camera_center = Point::new(0.0, 0.0, 0.0);
-        let focal_length = 1.0;
-
-        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+        let center = lookfrom;
+        
+        // setup the viewport with the unit vectors
+        let viewport_u = viewport_width * u;
+        let viewport_v = viewport_height * -v;
 
         let pixel_du = viewport_u / (image_width as f64);
         let pixel_dv = viewport_v / (image_height as f64);
 
-        let viewport_upper_left =
-            camera_center - Vec3::new(0., 0., focal_length) - viewport_u / 2. - viewport_v / 2.;
+        let viewport_upper_left = center - (focal_length * w) - viewport_u / 2.0 - viewport_v / 2.0;
         let pixel_00_location = viewport_upper_left + 0.5 * (pixel_du + pixel_dv);
-        // *** Start Rendering ***
+
 
         Self {
-            center: camera_center,
+            center: center,
             // aspect_ratio,
             image_height,
             image_width,
@@ -75,35 +145,61 @@ impl Camera {
             pixel_delta_v: pixel_dv,
             samples_per_pixel,
             max_depth,
+            basis_vectors: Vec3 { x: u, y: v, z: w }
         }
     }
 
     pub fn render(&self, world: Group) {
-        // File to write
-        let mut file_handle = std::fs::File::create("./image.ppm").unwrap();
+        let pixel_sample_scale = 1.0 / (self.samples_per_pixel as f64);
+        let world_rc = Arc::new(world);
 
+        // main Render loop!
+        // All done in parallel, so each row is performed in parallel using rayon
+        let pixels: Vec<Vec<Color>> = (0..self.image_height)
+            .into_par_iter()
+            // And get a nice progress bar!
+            .progress_count(self.image_height.try_into().unwrap())
+            .map(|j| {
+                // now, for each column in the row
+                (0..self.image_width)
+                    .map(|i| {
+                        let row = j as f64;
+                        let col = i as f64;
+
+                        // get a black color
+                        let mut color = Color::new(0.0, 0.0, 0.0).unwrap();
+
+                        // then for each pixel, take a bunch of samples and add what we see
+                        for _ in 0..self.samples_per_pixel {
+                            let ray = self.get_ray(col, row);
+                            color = color
+                                + self.get_ray_color(
+                                    ray.clone(),
+                                    Arc::clone(&world_rc),
+                                    self.max_depth,
+                                );
+                        }
+                        // scale because we do't want to overly sample a pixel
+                        color * pixel_sample_scale
+                    })
+                    .collect()
+            })
+            .collect(); // get everything back into the maian thread
+
+        // now that we're back in the main thread, open and edit our file
+        let mut file_handle = std::fs::File::create("./image.ppm").unwrap();
+        // for the PPM formt, write a header
         let header = format!("P3\n{} {}\n255\n", self.image_width, self.image_height).into_bytes();
         file_handle.write_all(&header).unwrap();
 
-        let pixel_sample_scale = 1.0 / (self.samples_per_pixel as f64);
-
-        for j in (0..self.image_height).progress() {
-            for i in 0..self.image_width {
-                let row = j as f64;
-                let col = i as f64;
-
-                let mut color = Color::new(0.0, 0.0, 0.0).unwrap();
-                for _ in 0..self.samples_per_pixel {
-                    let ray = self.get_ray(col, row);
-                    color = color + self.get_ray_color(ray.clone(), &world, self.max_depth);
-                }
-
-                write(&mut file_handle, color * pixel_sample_scale);
-            }
-        }
+        // write each pixel as RGB values for PPM formt
+        pixels.into_iter().for_each(|row| {
+            row.into_iter()
+                .for_each(|pixel_col| write(&mut file_handle, pixel_col));
+        });
     }
 
-    fn get_ray_color<T>(&self, ray: Ray<f64>, world: &T, remaining_bounces: isize) -> Color
+    fn get_ray_color<T>(&self, ray: Ray<f64>, world: Arc<T>, remaining_bounces: isize) -> Color
     where
         T: Hittable,
     {
