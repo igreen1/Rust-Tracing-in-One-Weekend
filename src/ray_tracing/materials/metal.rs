@@ -16,7 +16,7 @@ impl MetalMaterial {
 impl Scatterer for MetalMaterial {
     fn scatter(&self, ray_in: Ray<f64>, hit_record: &HitRecord) -> Option<(Ray<f64>, Color)> {
         let reflection_direction = ray_in.get_direction().reflect(&hit_record.normal);
-        let scattered_ray = Ray::new(hit_record.point, reflection_direction);
+        let scattered_ray = Ray::new_at_time(hit_record.point, reflection_direction, ray_in.get_time());
         let attenuation = self.albedo;
 
         Some((scattered_ray, attenuation))

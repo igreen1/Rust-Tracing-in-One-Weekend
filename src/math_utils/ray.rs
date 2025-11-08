@@ -5,13 +5,23 @@ use std::ops::{Add, Mul};
 pub struct Ray<T> {
     origin: Point<T>,
     direction: Vec3<T>,
+    time: f64,
 }
 
 impl<T> Ray<T> {
     pub const fn new(origin: Point<T>, direction: Vec3<T>) -> Ray<T> {
         Ray {
-            origin: origin,
-            direction: direction,
+            origin,
+            direction,
+            time: 0.0, 
+        }
+    }
+
+    pub const fn new_at_time(origin: Point<T>, direction: Vec3<T>, time: f64) -> Ray<T> {
+        Ray {
+            origin,
+            direction,
+            time,
         }
     }
 
@@ -21,6 +31,10 @@ impl<T> Ray<T> {
 
     pub const fn get_origin(&self) -> &Point<T> {
         &self.origin
+    }
+
+    pub const fn get_time(&self) -> f64 {
+        self.time
     }
 }
 

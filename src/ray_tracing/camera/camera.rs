@@ -294,7 +294,9 @@ impl Camera {
             + ((j + offset.y) * self.pixel_delta_v);
         let ray_direction = pixel_center - ray_origin;
 
-        Ray::new(ray_origin, ray_direction)
+        let ray_time: f64= rand::random();
+
+        Ray::new_at_time(ray_origin, ray_direction, ray_time)
     }
 
     fn defocus_disk_sample(&self) -> Point<f64> {

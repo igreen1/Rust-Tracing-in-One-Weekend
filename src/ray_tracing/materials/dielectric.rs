@@ -47,7 +47,7 @@ impl Scatterer for DielectricMaterial {
             unit_direction.refract(&hit_record.normal, ri)
         };
 
-        let scattered = Ray::new(hit_record.point, direction);
+        let scattered = Ray::new_at_time(hit_record.point, direction, ray_in.get_time());
 
         Some((scattered, attenuation))
     }

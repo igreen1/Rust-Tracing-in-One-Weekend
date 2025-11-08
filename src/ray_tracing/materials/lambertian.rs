@@ -18,7 +18,7 @@ impl LambertianMaterial {
 impl Scatterer for LambertianMaterial {
     fn scatter(
         &self,
-        _: Ray<f64>, // don't need in ray for lambertian reflection
+        r_in: Ray<f64>, // don't need in ray for lambertian reflection
         hit_record: &HitRecord,
     ) -> Option<(Ray<f64>, Color)> {
         let random_unit_vector = Vec3::random_unit_vector_same_hemisphere(&hit_record.normal);
@@ -31,7 +31,7 @@ impl Scatterer for LambertianMaterial {
             scatter_direction
         };
 
-        let scattered_ray = Ray::new(hit_record.point, scatter_direction);
+        let scattered_ray = Ray::new_at_time(hit_record.point, scatter_direction, r_in.get_time());
         let attenuation = self.albedo;
 
         Some((scattered_ray, attenuation))

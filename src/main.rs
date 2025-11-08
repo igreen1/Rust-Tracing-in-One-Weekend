@@ -7,6 +7,7 @@ pub mod ray_tracing;
 use std::sync::Arc;
 
 use crate::math_utils::point::Point;
+use crate::math_utils::vector::Vec3;
 use crate::ray_tracing::color::Color;
 use crate::ray_tracing::materials::dielectric::DielectricMaterial;
 use crate::ray_tracing::materials::lambertian::LambertianMaterial;
@@ -64,18 +65,30 @@ fn make_world() -> Group {
 
     let world_elements: Vec<(f64, f64, f64, f64, Arc<dyn Scatterer + Send + Sync>)> = vec![
         (0.0, -100.5, -1.0, 100.0, material_ground),
-        (0.0, 0.0, -1.2, 0.5, material_center),
+        // (0.0, 0.0, -1.2, 0.5, material_center),
         (-1.0, 0.0, -1.0, 0.5, material_left),
         (-1.0, 0.0, -1.0, 0.4, material_bubble),
         (1.0, 0.0, -1.0, 0.5, material_right),
     ];
 
-    let world_elements = world_elements
+    let mut world_elements: Vec<Box<dyn Hittable + Send + Sync>> = world_elements
         .into_iter()
         .map(|(px, py, pz, radius, material)| {
             Box::new(Sphere::new(Point::new(px, py, pz), radius, material))
                 as Box<dyn Hittable + Send + Sync>
-        });
+        }).collect();
 
-    Group::new(world_elements.collect())
+    // make the center one moving
+    let moving_center = Box::new(
+        Sphere::new_with_velocity(
+            Point::new(0.0, 0.0, -1.2),
+            0.5,
+            material_center,
+            Vec3::new(0.10, 0.10, 0.10)
+        )
+    ) as Box<dyn Hittable + Send + Sync>;
+
+    world_elements.push(moving_center);
+
+    Group::new(world_elements)
 }
