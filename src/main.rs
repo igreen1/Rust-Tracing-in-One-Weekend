@@ -24,6 +24,8 @@ fn main() {
 
     let camera = CameraBuilder::default()
         .set_look_from(-2.0, 2.0,1.0)
+        .set_defocus_angle(10.0)
+        .set_focus_dist(3.4)
         .make_camera();
 
     camera.render(world);

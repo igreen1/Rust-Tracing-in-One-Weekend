@@ -129,6 +129,17 @@ impl Vec3<f64> {
         Vec3::new(rand::random(), rand::random(), rand::random())
     }
 
+    pub fn random_in_unit_dist() -> Vec3<f64> {
+        loop {
+            let x: f64 = rand::random(); // required for type inference
+            let y: f64 = rand::random(); // required for type inference
+            let p = Vec3::<f64>::new(2.0 * x - 1.0, 2.0 * y - 1.0, 0.);
+            if p.magnitude_squared() < 1.0 {
+                return p;
+            }
+        }
+    }
+
     pub fn random_in_range(min: f64, max: f64) -> Vec3<f64> {
         Vec3::new(
             rand::random_range(min..max),
